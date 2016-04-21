@@ -1,0 +1,11 @@
+"..\bin\STARTUP.obj",
+"..\bin\main.obj",
+"..\bin\PID.obj",
+"..\bin\key.obj",
+"..\bin\lcd1602.obj",
+"..\bin\pwm.obj",
+"..\bin\adc.obj",
+"..\bin\Uart1.obj" 
+TO "..\bin\MFC" 
+PRINT(".\MFC.m51") RAMSIZE(256) 
+CODE( 0X0000-0X1FFF )

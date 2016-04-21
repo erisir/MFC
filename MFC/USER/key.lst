@@ -1,0 +1,96 @@
+C51 COMPILER V9.00   KEY                                                                   04/22/2016 01:08:10 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE KEY
+OBJECT MODULE PLACED IN ..\bin\key.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE ..\HARDWARE\key.c BROWSE INCDIR(..\HARDWARE;..\USER) DEBUG OBJECTEXTEND PRI
+                    -NT(.\key.lst) OBJECT(..\bin\key.obj)
+
+line level    source
+
+   1          #include "STC12C5A60S2.h"
+   2          #include "key.h"
+   3          #include "pwm.h"
+   4          #define KeyPort P3        //data口  
+   5          
+   6          sbit KEY3       = P2^6;
+   7          sbit KEY4       = P2^7;
+   8          
+   9          void DelayUs2x(unsigned char t);        //us级延时函数声明 
+  10          unsigned char KeyScan(void);            //键盘扫描
+  11          unsigned char KeyPro(void);                     //键盘输出值
+  12          
+  13          
+  14          /****************按键扫描函数，返回扫描键值*****************/
+  15          unsigned char KeyScan(void)  //键盘扫描函数，使用行列反转扫描法
+  16          {
+  17   1              unsigned char cord_h,cord_l;    //行列值中间变量
+  18   1              KeyPort=0x0f;                           //行线输出全为0
+  19   1              cord_h=KeyPort&0x0f;                    //读入列线值
+  20   1              if(cord_h!=0x0f)                        //先检测有无按键按下
+  21   1               {
+  22   2                        DelayMs(10);                  //去抖
+  23   2                        if((KeyPort&0x0f)!=0x0f)
+  24   2                                {
+  25   3                                          cord_h=KeyPort&0x0f;        //读入列线值
+  26   3                                          KeyPort=cord_h|0xf0;        //输出当前列线值
+  27   3                                          cord_l=KeyPort&0xf0;        //读入行线值
+  28   3                                      
+  29   3                                          while((KeyPort&0xf0)!=0xf0);        //等待松开并输出
+  30   3                                      
+  31   3                                          return(cord_h+cord_l);      //键盘最后组合码值
+  32   3                                 }
+  33   2               }
+  34   1              return(0xff);     //返回该值
+  35   1      }
+  36          
+  37          /****************按键的输出值*****************/
+  38          unsigned char KeyPro(void)       
+  39          {
+  40   1      
+  41   1              if(KEY3 == 0){
+  42   2            DelayMs(10); 
+  43   2                if(KEY3 == 0) return 0;
+  44   2                }
+  45   1              if(KEY4 == 0){
+  46   2            DelayMs(10); 
+  47   2                if(KEY4 == 0) return 1;
+  48   2                }
+  49   1      
+  50   1              switch(KeyScan())
+  51   1               {
+  52   2                        case 0x7e:return 0;break;//0 按下相应的键显示相对应的码值
+  53   2                        case 0x7d:return 1;break;//1
+  54   2                        case 0x7b:return 2;break;//2
+C51 COMPILER V9.00   KEY                                                                   04/22/2016 01:08:10 PAGE 2   
+
+  55   2                        case 0x77:return 3;break;//3
+  56   2                        case 0xbe:return 4;break;//4
+  57   2                        case 0xbd:return 5;break;//5
+  58   2                        case 0xbb:return 6;break;//6
+  59   2                        case 0xb7:return 7;break;//7
+  60   2                        case 0xde:return 8;break;//8
+  61   2                        case 0xdd:return 9;break;//9
+  62   2                        case 0xdb:return 10;break;//a
+  63   2                        case 0xd7:return 11;break;//b
+  64   2                        case 0xee:return 12;break;//c
+  65   2                        case 0xed:return 13;break;//d
+  66   2                        case 0xeb:return 14;break;//e
+  67   2                        case 0xe7:return 15;break;//f
+  68   2                        default:return 0xff;break;
+  69   2               }
+  70   1      }  
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    195    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
