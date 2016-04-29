@@ -17,30 +17,24 @@ PID函数
 *************************************************/ 
 /*************PID**********************************/
 struct PID {
-unsigned int Proportion; // 比例常数 Proportional Const
-unsigned int Integral; // 积分常数 Integral Const
-unsigned int Derivative; // 微分常数 Derivative Const
-unsigned int LastError; // Error[-1]
-unsigned int PrevError; // Error[-2]
+float Proportion; // 比例常数 Proportional Const
+float Integral; // 积分常数 Integral Const
+float Derivative; // 微分常数 Derivative Const
+
+int LastError; // Error[-1]
+int PrevError; // Error[-2]
+int SumError;
+int maxMoveStep;
+int rout;
+unsigned int set_point;
+
 };
 
-
-/*unsigned int rout; // PID Response (Output) 
-unsigned int rin; // PID Feedback (Input)
-unsigned int temper;
-unsigned char shu[3]={0,0,0};
-unsigned char counter;
-
-bit tp_flag;
-unsigned char buff[8];
-	*/
-
-void PIDBEGIN();
-unsigned int PIDCalc( struct PID *pp, unsigned int NextPoint ) ;
-void PIDInit (struct PID *pp); 
-void KeyDown (); 
-void KeyUp (); 
+void PIDInit ();  
+int PIDCalc( struct PID *pp, unsigned int NextPoint ) ;
 void compare_temper(unsigned int votage_input); 		//PID温度控制输出函数
-unsigned int getTemperSet();
 
+unsigned int getPIDSet_point();
+void SetPointDown (); 
+void SetPointUp ();
 #endif

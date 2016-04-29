@@ -3,6 +3,7 @@
 #include "pwm.h"
 #define KeyPort P3	  //data¿Ú  
 
+sbit KEY2	= P2^5;
 sbit KEY3	= P2^6;
 sbit KEY4	= P2^7;
 
@@ -45,6 +46,10 @@ unsigned char KeyPro(void)
 	if(KEY4 == 0){
       DelayMs(10); 
 	  if(KEY4 == 0)	return 1;
+	  }
+	if(KEY2 == 0){
+      DelayMs(10); 
+	  if(KEY4 == 0)	return 2;
 	  }
 
 	switch(KeyScan())

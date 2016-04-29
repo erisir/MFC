@@ -25,76 +25,41 @@
 
 unsigned char in_str[]="0.00V";
 unsigned char d[5];
-uint  ch=0, counter=10;
-uint votage_input, key_input;
+uint  ch=0, counter=0,counterLCD=0;getVoltageCounter=5;
+
+uint votage_input,votage_tmp,votage_tmp1=2000, key_input;
+
  
-
-void  ADC_Init();  				// 初始化AD
-void  Delay(unsigned int z); 	// 延时
-void  view_Votage();
-void  view_SetVotage();
-
-
 void ADC_start()
 {
-	uint a = 0;
-	
-	PWM_Initial();
-	PWM_clock(2);      // PCA/PWM时钟源为 定时器0的溢出
-	PWM0_set(240); //0全开，作为对比
+
+ 
 	while(1)
-	{  
-		view_Votage();
-		view_SetVotage();
-		a = KeyPro();  //********************************为后期键盘准备,目前只取key3 =0，key4=1
-	 	if(a==0) KeyDown();
-		if(a==1) KeyUp();		
+	{   
+	    uint i = 0;
+		votage_tmp = 0;
+	    for(i=0;i< getVoltageCounter ;i++){
+		    votage_input = votage_input&0xff;
+		    votage_tmp +=  (uint)((4700l*votage_input)/255)/getVoltageCounter;
+			DelayMs(10);
+		}
+ 
+	    compare_temper(votage_tmp);	
+		  
+		DelayMs(400);
+
+
+		num_lcdDis(0,0x02,getPIDSet_point(),4);
+		num_lcdDis(1,0x02,votage_tmp,4);
+
+		key_input = KeyPro();  //********************************为后期键盘准备,目前只取key3 =0，key4=1
+	 	if(key_input==0) SetPointDown();
+		if(key_input==1) SetPointUp();
+	 		
 	}
-}  
-
-void view_Votage()
-{
-	 uint K = 0;
-	  
-	votage_input =votage_input&0xff;
-	K =   (uint)((4700l*votage_input)/255);
-	compare_temper(K);
-	in_str[1] = K / 1000;	  //最高位
-	K = K % 1000;
-	in_str[2] = K / 100;  		//次高位
-	K = K % 100;
-	in_str[3] = K /10;			//...
-	in_str[4] = K % 10;			//....
-
-
-	num_lcdDis(0,0x06,in_str[4],2);
-	num_lcdDis(0,0x05,in_str[3],2);
-	num_lcdDis(0,0x04,in_str[2],2);
-	num_lcdDis(0,0x03,in_str[1],2);
-	num_lcdDis(0,0x02,0,2);
- 
- 
 }
-void view_SetVotage()
-{
-	uint L = 0;
-
-	L = getTemperSet();
-	d[1] = L / 1000;	  //最高位
-	L = L % 1000;
-	d[2] = L / 100;  		//次高位
-	L = L % 100;
-	d[3] = L /10;			//...
-	d[4] = L % 10;			//....
-	
-	num_lcdDis(1,0x06,d[4],2);
-	num_lcdDis(1,0x05,d[3],2);
-	num_lcdDis(1,0x04,d[2],2);
-	num_lcdDis(1,0x03,d[1],2);
-	num_lcdDis(1,0x02,d[0],2);
-
-
-}
+  
+ 
 
 
 void ADC_Init()
@@ -123,17 +88,25 @@ void ADC_isr(void) interrupt 5 using 1   //中断服务程序,每100ms读一次AD
 {
 
 	ADC_CONTR &= !ADC_FLAG; 
-	 
-	if (ch==0  )             
-	 {
-	 	votage_input= ADC_RES;
-	 }
-/*	else if(ch==1)
+	if (counter==2)
 	{
-	   votage1_input = 127;
-	} */
-    if(++ch>1)
-    	ch=0;
- 
+		if (ch==0  )             
+		 {
+		 	votage_input= ADC_RES;
+		 }
+		else if(ch==1)
+		{
+		  
+			//light_input = 127;
+		}
+	  //else if (ch==2)  { key_input= ADC_RES; }
+	    if(++ch>1)
+	    	ch=0;
+
+		counter = 0;
+	}
+	        
+	counter++;
+	counterLCD++;
 	ADC_CONTR = ADC_POWER | ADC_SPEEDLL | ADC_START|ch ;
 }

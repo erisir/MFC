@@ -93,7 +93,7 @@ void num_lcdDis(uchar X,uchar Y,uint num,uchar n)
    	for(i=(n-1);i>0;i--)
     { 	  
 	  	lcd_Write_com((i+Y-1)|0x80+hang);	  //从个位开始显示
-  		temp = num%10+0x30;
+  		temp = num%10 +0x30;
   		lcd_write_date(temp);	
 	 	delay5ms(); 
 	  	num/=10;					 
