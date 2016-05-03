@@ -3,7 +3,11 @@
 #include "pwm.h"
 #define KeyPort P3	  //data口  
 
-sbit KEY2	= P2^5;
+sbit KEY0	= P1^5;
+sbit KEY1	= P2^6;
+sbit KEY2	= P2^7;
+
+
 sbit KEY3	= P2^6;
 sbit KEY4	= P2^7;
 
@@ -11,7 +15,7 @@ void DelayUs2x(unsigned char t);	//us级延时函数声明
 unsigned char KeyScan(void);		//键盘扫描
 unsigned char KeyPro(void);			//键盘输出值
 
-
+ 
 /****************按键扫描函数，返回扫描键值*****************/
 unsigned char KeyScan(void)  //键盘扫描函数，使用行列反转扫描法
 {
@@ -39,7 +43,21 @@ unsigned char KeyScan(void)  //键盘扫描函数，使用行列反转扫描法
 unsigned char KeyPro(void)	 
 {
 
-	if(KEY3 == 0){
+	if(KEY0 == 0){
+      DelayMs(10); 
+	  if(KEY0 == 0)	return 9;
+	  }
+
+	if(KEY1 == 0){
+      DelayMs(10); 
+	  if(KEY1 == 0)	return 0;
+	  }
+	if(KEY2 == 0){
+      DelayMs(10); 
+	  if(KEY2 == 0)	return 1;
+	  }
+
+    if(KEY3 == 0){
       DelayMs(10); 
 	  if(KEY3 == 0)	return 0;
 	  }
@@ -47,10 +65,7 @@ unsigned char KeyPro(void)
       DelayMs(10); 
 	  if(KEY4 == 0)	return 1;
 	  }
-	if(KEY2 == 0){
-      DelayMs(10); 
-	  if(KEY4 == 0)	return 2;
-	  }
+
 
 	switch(KeyScan())
 	 {

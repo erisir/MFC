@@ -8,7 +8,7 @@
 #include "key.h"
 #include "pwm.h"
 #include "lcd1602.h"
-
+#include "Uart1.h"
 
 #define U8 unsigned char
 #define uint unsigned int
@@ -25,48 +25,66 @@
 
 unsigned char in_str[]="0.00V";
 unsigned char d[5];
-uint  ch=0, counter=0,counterLCD=0;getVoltageCounter=5;
+uint  ch=0, counter=0,counterLCD=0;getVoltageCounter=2;
 
-uint votage_input,votage_tmp,votage_tmp1=2000, key_input;
+uint votage_input,votage_avr;
 
  
 void ADC_start()
 {
 
- 
+    
+
 	while(1)
 	{   
 	    uint i = 0;
-		votage_tmp = 0;
+		votage_avr = 0;
 	    for(i=0;i< getVoltageCounter ;i++){
 		    votage_input = votage_input&0xff;
-		    votage_tmp +=  (uint)((4700l*votage_input)/255)/getVoltageCounter;
+		    votage_avr +=  (uint)((4700l*votage_input)/255)/getVoltageCounter;
 			DelayMs(10);
 		}
- 
-	    compare_temper(votage_tmp);	
-		  
-		DelayMs(400);
-
-
+ 		//send_string_com("hello!\r\n");
+	    compare_temper(votage_avr);	
+		  		 
 		num_lcdDis(0,0x02,getPIDSet_point(),4);
-		num_lcdDis(1,0x02,votage_tmp,4);
+		num_lcdDis(1,0x02,votage_avr,4);
 
-		key_input = KeyPro();  //********************************为后期键盘准备,目前只取key3 =0，key4=1
-	 	if(key_input==0) SetPointDown();
-		if(key_input==1) SetPointUp();
+      	keyFunction(KeyPro());//********************************为后期键盘准备,目前只取key3 =0，key4=1
+	
+	
 	 		
 	}
 }
-  
  
+void  keyFunction(unsigned int key_value)
+{
+   	switch(key_value)
+	 {
+		  case 0x00:SetPointDown();break;//0 按下相应的键显示相对应的码值
+		  case 0x01:SetPointUp();break;//1
+		  case 0x02:PIDparam_P_inc();break;//2
+		  case 0x03:PIDparam_P_dec();break;//3
+		  case 0x04:PIDparam_I_inc();break;//4
+		  case 0x05:PIDparam_I_dec();break;//5
+		  case 0x06:PIDparam_D_inc();break;//6
+		  case 0x07:PIDparam_D_dec();break;//7
+		  case 0x08:PIDparam_Dura_inc();break;//8
+		  case 0x09:PIDparam_Dura_dec();break;//9
+		  case 0x0A:break;//a
+		  case 0x0B:break;//b
+		  case 0x0C:break;//c		  
+		  default:break;
+	 }
+ 
+} 
 
 
 void ADC_Init()
 {
 
     ADC_RES = 0;                                           //清除上次采集的结果	
-	IE=0xa0;
+	EADC = 1;
 	P1ASF=0xe0;                                            //设置AD输入通道为 P1.0-1.2 
     ADC_CONTR = ADC_POWER | ADC_SPEEDLL | ADC_START|ch ;   //选择开启的通道
     Delay(2);                                              //上电启动AD转换的延时

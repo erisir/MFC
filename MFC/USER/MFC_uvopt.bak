@@ -214,10 +214,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>24</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>1</TopLine>
-      <CurrentLine>19</CurrentLine>
+      <TopLine>4</TopLine>
+      <CurrentLine>14</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -291,10 +291,10 @@
       <FileType>1</FileType>
       <tvExp>1</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>36</ColumnNumber>
+      <ColumnNumber>8</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>30</TopLine>
-      <CurrentLine>47</CurrentLine>
+      <TopLine>78</TopLine>
+      <CurrentLine>87</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\HARDWARE\adc.c</PathWithFileName>
       <FilenameWithoutPath>adc.c</FilenameWithoutPath>
@@ -305,10 +305,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>24</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>5</TopLine>
-      <CurrentLine>15</CurrentLine>
+      <TopLine>1</TopLine>
+      <CurrentLine>19</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\HARDWARE\Uart1.c</PathWithFileName>
       <FilenameWithoutPath>Uart1.c</FilenameWithoutPath>
@@ -1656,13 +1656,13 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>0</ActiveTab>
+      <ActiveTab>2</ActiveTab>
       <Documents>
         <Doc>
           <Name>.\main.c</Name>
-          <ColumnNumber>24</ColumnNumber>
-          <TopLine>1</TopLine>
-          <CurrentLine>19</CurrentLine>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>4</TopLine>
+          <CurrentLine>14</CurrentLine>
         </Doc>
         <Doc>
           <Name>.\PID.c</Name>
@@ -1672,9 +1672,9 @@
         </Doc>
         <Doc>
           <Name>..\HARDWARE\adc.c</Name>
-          <ColumnNumber>36</ColumnNumber>
-          <TopLine>30</TopLine>
-          <CurrentLine>47</CurrentLine>
+          <ColumnNumber>8</ColumnNumber>
+          <TopLine>78</TopLine>
+          <CurrentLine>87</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\HARDWARE\pwm.c</Name>
@@ -1684,9 +1684,9 @@
         </Doc>
         <Doc>
           <Name>..\HARDWARE\Uart1.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>5</TopLine>
-          <CurrentLine>15</CurrentLine>
+          <ColumnNumber>24</ColumnNumber>
+          <TopLine>1</TopLine>
+          <CurrentLine>19</CurrentLine>
         </Doc>
         <Doc>
           <Name>.\STC12C5A60S2.h</Name>

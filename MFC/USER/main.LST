@@ -1,0 +1,101 @@
+C51 COMPILER V9.00   MAIN                                                                  05/02/2016 12:26:19 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN ..\bin\main.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE main.c BROWSE INCDIR(..\HARDWARE;..\USER) DEBUG OBJECTEXTEND OBJECT(..\bin\
+                    -main.obj)
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #include "lcd1602.h"
+   3          #include "pwm.h"
+   4          #include "key.h"
+   5          #include "adc.h"
+   6          #include "pid.h"
+   7          #include "Uart1.h"
+   8          //#include "STC12C5A60S2.h"
+   9          //#include <intrins.h>
+  10          
+  11          #define U8 unsigned char
+  12          #define U16 unsigned int
+  13          
+  14          
+  15          
+  16          unsigned   char   buf[8];
+  17          char rec;
+  18          char i;
+  19          char flag;//buf:@XX 1234
+  20          /****************************硬件接口定义***********************************
+  21            PWM:模块0对应P1.3,模块1对应P1.4  [0为手动控制口，1位PID反馈控制口】
+  22            lcd:sbit RS = P2^3; sbit RW = P2^4; sbit E  = P2^5;  DBPort  P0 //数据端口
+  23            adc:P1^0,P1^1两路采集
+  24            key:KeyPort P3【以后扩展使用】 ，sbit KEY3    = P2^6;   KEY4  = P2^7;
+  25          ****************************************************************************/
+  26          
+  27          
+  28          void main(void)
+  29          {
+  30   1              EA=1;//开总中断
+  31   1              lcd1602_init();
+  32   1              hz_lcdDis(0,4,"Welcome!");
+  33   1              
+  34   1              InitUart1();
+  35   1              PIDInit();
+  36   1              //ADC_Init();   
+  37   1              PWM_Initial();
+  38   1       
+  39   1              DelayMs(250);   
+  40   1              lcd_Write_com(0x01);    //清屏
+  41   1              hz_lcdDis(0,0,"S      mV Q ");
+  42   1              hz_lcdDis(1,0,"G      mV d");
+  43   1              
+  44   1              PWM_clock(2);      // PCA/PWM时钟源为 定时器0的溢出
+  45   1      
+  46   1              ADC_start();
+  47   1      
+  48   1       }
+  49          /*------------------------------------------------*/
+  50          void serial () interrupt 4
+  51          { 
+  52   1      send_string_com("hello!\r\n");
+  53   1              if(RI) {                
+  54   2                      rec=SBUF;
+C51 COMPILER V9.00   MAIN                                                                  05/02/2016 12:26:19 PAGE 2   
+
+  55   2                      send_char_com(rec);                     
+  56   2                      if(rec == '@'){//begin
+  57   3                              flag = 1;       
+  58   3                      }       
+  59   2                      if(flag ==1){
+  60   3                              buf[i] = rec;
+  61   3                              i++;    
+  62   3                              
+  63   3                              if(i==7){ 
+  64   4                              flag = 0;
+  65   4                              i=0;
+  66   4                              buf[7] = '\0';
+  67   4                              keyFunction(buf[1]);                    
+  68   4                              }
+  69   3      
+  70   3                      }
+  71   2                      RI=0;
+  72   2              }
+  73   1      
+  74   1      }
+  75           
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    191    ----
+   CONSTANT SIZE    =     43    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     11    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

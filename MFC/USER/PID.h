@@ -27,6 +27,8 @@ int SumError;
 int maxMoveStep;
 int rout;
 unsigned int set_point;
+unsigned int deadZone;
+unsigned int duration;
 
 };
 
@@ -37,4 +39,12 @@ void compare_temper(unsigned int votage_input); 		//PID温度控制输出函数
 unsigned int getPIDSet_point();
 void SetPointDown (); 
 void SetPointUp ();
+void PIDparam_P_inc(); 
+void PIDparam_P_dec();
+void PIDparam_I_inc(); 
+void PIDparam_I_dec();
+void PIDparam_D_inc(); 
+void PIDparam_D_dec();
+void PIDparam_Dura_inc();
+void PIDparam_Dura_dec();
 #endif

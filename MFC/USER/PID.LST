@@ -1,0 +1,191 @@
+C51 COMPILER V9.00   PID                                                                   05/02/2016 12:26:19 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE PID
+OBJECT MODULE PLACED IN ..\bin\PID.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE PID.c BROWSE INCDIR(..\HARDWARE;..\USER) DEBUG OBJECTEXTEND OBJECT(..\bin\P
+                    -ID.obj)
+
+line level    source
+
+   1          #include "PID.h"
+   2          #include "adc.h"
+   3          
+   4          #include "PWM.h"
+   5          #include "Uart1.h"
+   6          #include "string.h"
+   7          #include "math.h"
+   8           #include "lcd1602.h"
+   9          
+  10          //xdata struct PID spid; // PID Control Structure
+  11           struct PID spid; // PID Control Structure
+  12           int pidCounter =0;
+  13          
+  14          /************************************************
+  15                        PID函数体 
+  16          51单片机最不擅长浮点数计算，转换成int型计算
+  17          *************************************************/
+  18          int PIDCalc( struct PID *pp, unsigned int NextPoint ) 
+  19          { 
+  20   1        int Error,dError;
+  21   1         
+  22   1        Error = spid.set_point - NextPoint;       // 偏差E(t) 
+  23   1        pp->SumError = pp->PrevError+pp->LastError+Error;                     // 积分
+  24   1        dError=Error - pp->LastError;             // 当前微分
+  25   1        pp->PrevError = pp->LastError; 
+  26   1        pp->LastError = Error; 
+  27   1      
+  28   1        if(abs(Error)< pp->deadZone){
+  29   2        pp->SumError = 0;
+  30   2        return 0;
+  31   2        }
+  32   1      
+  33   1        return ( 
+  34   1                  pp->Proportion * Error        //比例 
+  35   1                  + pp->Integral * pp->SumError     //积分项 
+  36   1                  + pp->Derivative * dError     // 微分项      负责刹车
+  37   1                              );  
+  38   1      } 
+  39           
+  40          /*********************************************************** 
+  41                       PID温度控制做动函数
+  42          ***********************************************************/ 
+  43          
+  44          void compare_temper(unsigned int v_input)               //PID控制输出函数
+  45          {  
+  46   1               int delta = 0;
+  47   1               pidCounter++;
+  48   1               if(pidCounter<spid.duration)return;
+  49   1               pidCounter = 0; 
+  50   1      
+  51   1               delta =  PIDCalc ( &spid,v_input ); 
+  52   1      
+  53   1               if( delta > spid.maxMoveStep){
+  54   2                delta =  spid.maxMoveStep;
+C51 COMPILER V9.00   PID                                                                   05/02/2016 12:26:19 PAGE 2   
+
+  55   2               }
+  56   1               if( delta < (-1*spid.maxMoveStep)){
+  57   2                delta =  (-1*spid.maxMoveStep);
+  58   2               }
+  59   1      
+  60   1           spid.rout += delta; 
+  61   1               
+  62   1      
+  63   1               if(spid.rout>250)spid.rout = 250;
+  64   1      
+  65   1               if(spid.rout< 5) spid.rout = 5;
+  66   1       
+  67   1               
+  68   1               PWM1_set(spid.rout) ;
+  69   1               
+  70   1               num_lcdDis(0,0x0D,spid.rout,3);
+  71   1      
+  72   1                if(delta>0){
+  73   2                hz_lcdDis(1,0x0C,"+");
+  74   2                      num_lcdDis(1,0x0D,delta,3);
+  75   2              }else{
+  76   2                      hz_lcdDis(1,0x0C,"-");
+  77   2                      num_lcdDis(1,0x0D,-1*delta,3);
+  78   2              }
+  79   1                       
+  80   1      }
+  81          /************************************************
+  82                                          PID函数初始化
+  83          *************************************************/
+  84          void PIDInit() 
+  85          { 
+  86   1      
+  87   1        memset (&spid,0,sizeof(struct PID));  // Initialize Structure 
+  88   1        
+  89   1        spid.Proportion = 0.01; // Set PID Coefficients       0.009开始震荡，取60%~70%=       0.006
+  90   1        spid.Integral =   0.0002; 
+  91   1        spid.Derivative =0.02; 
+  92   1        spid.rout = 0;
+  93   1        spid.set_point = 4000;
+  94   1        spid.maxMoveStep = 80;
+  95   1        spid.deadZone = 55;
+  96   1        spid.duration = 4;
+  97   1      }
+  98          
+  99          unsigned int getPIDSet_point()
+ 100          {
+ 101   1              return spid.set_point; 
+ 102   1      }
+ 103          void SetPointDown ()
+ 104          {
+ 105   1              spid.set_point-=1000;
+ 106   1              PWM0_set( spid.set_point/50);
+ 107   1      
+ 108   1      }
+ 109           
+ 110          void SetPointUp ()
+ 111          {
+ 112   1              spid.set_point+=1000;
+ 113   1              PWM0_set(spid.set_point/50);
+ 114   1      
+ 115   1      }
+ 116          void PIDparam_P_inc ()
+C51 COMPILER V9.00   PID                                                                   05/02/2016 12:26:19 PAGE 3   
+
+ 117          {
+ 118   1         spid.Proportion +=0.001;
+ 119   1         hz_lcdDis(0,0x0a,"P");
+ 120   1         num_lcdDis(0,0x0b,spid.Proportion*1000,2);
+ 121   1      } 
+ 122          void PIDparam_P_dec  ()
+ 123          {
+ 124   1        spid.Proportion -=0.001;
+ 125   1         hz_lcdDis(0,0x0a,"P");
+ 126   1         num_lcdDis(0,0x0b,spid.Proportion*1000,2);
+ 127   1      } 
+ 128          void PIDparam_I_inc ()
+ 129          {
+ 130   1         spid.Proportion +=0.001;
+ 131   1         hz_lcdDis(0,0x0a,"P");
+ 132   1         num_lcdDis(0,0x0b,spid.Proportion*1000,2);
+ 133   1      }  
+ 134          void PIDparam_I_dec  ()
+ 135          {
+ 136   1         spid.Proportion -=0.001;
+ 137   1         hz_lcdDis(0,0x0a,"P");
+ 138   1         num_lcdDis(0,0x0b,spid.Integral*1000,2);
+ 139   1      } 
+ 140          void PIDparam_D_inc ()
+ 141          {
+ 142   1         spid.Proportion +=0.001;
+ 143   1         hz_lcdDis(0,0x0a,"P");
+ 144   1         num_lcdDis(0,0x0b,spid.Derivative*1000,2);
+ 145   1      }  
+ 146          void PIDparam_D_dec  ()
+ 147          {
+ 148   1        spid.Proportion -=0.001;
+ 149   1         hz_lcdDis(0,0x0a,"P");
+ 150   1         num_lcdDis(0,0x0b,spid.Derivative*1000,2);
+ 151   1      }
+ 152          void PIDparam_Dura_inc ()
+ 153          {
+ 154   1         spid.duration +=5;
+ 155   1         hz_lcdDis(0,0x0a,"P");
+ 156   1         num_lcdDis(0,0x0b,spid.Derivative*1000,2);
+ 157   1      }  
+ 158          void PIDparam_Dura_dec  ()
+ 159          {
+ 160   1        spid.duration -=5;
+ 161   1         hz_lcdDis(0,0x0a,"P");
+ 162   1         num_lcdDis(0,0x0b,spid.Derivative*1000,2);
+ 163   1      }  
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1202    ----
+   CONSTANT SIZE    =      6    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     30       9
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

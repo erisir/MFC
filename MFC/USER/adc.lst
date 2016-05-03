@@ -1,0 +1,158 @@
+C51 COMPILER V9.00   ADC                                                                   05/02/2016 12:26:21 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE ADC
+OBJECT MODULE PLACED IN ..\bin\adc.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE ..\HARDWARE\adc.c BROWSE INCDIR(..\HARDWARE;..\USER) DEBUG OBJECTEXTEND PRI
+                    -NT(.\adc.lst) OBJECT(..\bin\adc.obj)
+
+line level    source
+
+   1          /*
+   2          在中断中读取votage_input值，100ms一次，在adc_start中实现循环，pid控制
+   3          */
+   4          #include "stc12c5a60s2.h"
+   5          #include "intrins.h"
+   6          #include "adc.h"
+   7          #include "PID.h"
+   8          #include "key.h"
+   9          #include "pwm.h"
+  10          #include "lcd1602.h"
+  11          #include "Uart1.h"
+  12          
+  13          #define U8 unsigned char
+  14          #define uint unsigned int
+  15          #define uchar unsigned char
+  16          
+  17          
+  18          #define ADC_POWER   0x80            //ADC power control bit 电源控制位
+  19          #define ADC_FLAG    0x10            //ADC complete flag   标志位
+  20          #define ADC_START   0x08            //ADC start control bit 启动控制位
+  21          #define ADC_SPEEDLL 0x00            //420 clocks
+  22          #define ADC_SPEEDL  0x20            //280 clocks
+  23          #define ADC_SPEEDH  0x40            //140 clocks
+  24          #define ADC_SPEEDHH 0x60            //70 clocks
+  25          
+  26          unsigned char in_str[]="0.00V";
+  27          unsigned char d[5];
+  28          uint  ch=0, counter=0,counterLCD=0;getVoltageCounter=2;
+  29          
+  30          uint votage_input,votage_avr;
+  31          
+  32           
+  33          void ADC_start()
+  34          {
+  35   1      
+  36   1          
+  37   1      
+  38   1              while(1)
+  39   1              {   
+  40   2                  uint i = 0;
+  41   2                      votage_avr = 0;
+  42   2                  for(i=0;i< getVoltageCounter ;i++){
+  43   3                          votage_input = votage_input&0xff;
+  44   3                          votage_avr +=  (uint)((4700l*votage_input)/255)/getVoltageCounter;
+  45   3                              DelayMs(10);
+  46   3                      }
+  47   2                      //send_string_com("hello!\r\n");
+  48   2                  compare_temper(votage_avr); 
+  49   2                                       
+  50   2                      num_lcdDis(0,0x02,getPIDSet_point(),4);
+  51   2                      num_lcdDis(1,0x02,votage_avr,4);
+  52   2      
+  53   2              keyFunction(KeyPro());//********************************为后期键盘准备,目前只取key3 =0，key4=1
+  54   2              
+C51 COMPILER V9.00   ADC                                                                   05/02/2016 12:26:21 PAGE 2   
+
+  55   2              
+  56   2                              
+  57   2              }
+  58   1      }
+  59           
+  60          void  keyFunction(unsigned int key_value)
+  61          {
+  62   1              switch(key_value)
+  63   1               {
+  64   2                        case 0x00:SetPointDown();break;//0 按下相应的键显示相对应的码值
+  65   2                        case 0x01:SetPointUp();break;//1
+  66   2                        case 0x02:PIDparam_P_inc();break;//2
+  67   2                        case 0x03:PIDparam_P_dec();break;//3
+  68   2                        case 0x04:PIDparam_I_inc();break;//4
+  69   2                        case 0x05:PIDparam_I_dec();break;//5
+  70   2                        case 0x06:PIDparam_D_inc();break;//6
+  71   2                        case 0x07:PIDparam_D_dec();break;//7
+  72   2                        case 0x08:PIDparam_Dura_inc();break;//8
+  73   2                        case 0x09:PIDparam_Dura_dec();break;//9
+  74   2                        case 0x0A:break;//a
+  75   2                        case 0x0B:break;//b
+  76   2                        case 0x0C:break;//c             
+  77   2                        default:break;
+  78   2               }
+  79   1       
+  80   1      } 
+  81          
+  82          
+  83          void ADC_Init()
+  84          {
+  85   1      
+  86   1          ADC_RES = 0;                                           //清除上次采集的结果 
+  87   1              EADC = 1;
+  88   1              P1ASF=0xe0;                                            //设置AD输入通道为 P1.0-1.2 
+  89   1          ADC_CONTR = ADC_POWER | ADC_SPEEDLL | ADC_START|ch ;   //选择开启的通道
+  90   1          Delay(2);                                              //上电启动AD转换的延时
+  91   1      }
+  92          
+  93          
+  94          void Delay(unsigned int n)
+  95          {
+  96   1              unsigned int x;
+  97   1          while (n--)
+  98   1                      {
+  99   2                                x=5000;
+ 100   2                                while (x--);
+ 101   2                      }
+ 102   1      }
+ 103          
+ 104          
+ 105          void ADC_isr(void) interrupt 5 using 1   //中断服务程序,每100ms读一次AD
+ 106          {
+ 107   1      
+ 108   1              ADC_CONTR &= !ADC_FLAG; 
+ 109   1              if (counter==2)
+ 110   1              {
+ 111   2                      if (ch==0  )             
+ 112   2                       {
+ 113   3                              votage_input= ADC_RES;
+ 114   3                       }
+ 115   2                      else if(ch==1)
+ 116   2                      {
+C51 COMPILER V9.00   ADC                                                                   05/02/2016 12:26:21 PAGE 3   
+
+ 117   3                        
+ 118   3                              //light_input = 127;
+ 119   3                      }
+ 120   2                //else if (ch==2)  { key_input= ADC_RES; }
+ 121   2                  if(++ch>1)
+ 122   2                      ch=0;
+ 123   2      
+ 124   2                      counter = 0;
+ 125   2              }
+ 126   1                      
+ 127   1              counter++;
+ 128   1              counterLCD++;
+ 129   1              ADC_CONTR = ADC_POWER | ADC_SPEEDLL | ADC_START|ch ;
+ 130   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    344    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     23       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -4,11 +4,12 @@
 #include "PWM.h"
 #include "Uart1.h"
 #include "string.h"
+#include "math.h"
  #include "lcd1602.h"
 
 //xdata struct PID spid; // PID Control Structure
  struct PID spid; // PID Control Structure
-
+ int pidCounter =0;
 
 /************************************************
               PID函数体 
@@ -24,6 +25,11 @@ int PIDCalc( struct PID *pp, unsigned int NextPoint )
   pp->PrevError = pp->LastError; 
   pp->LastError = Error; 
 
+  if(abs(Error)< pp->deadZone){
+  pp->SumError = 0;
+  return 0;
+  }
+
   return ( 
             pp->Proportion * Error        //比例 
             + pp->Integral * pp->SumError     //积分项 
@@ -37,8 +43,12 @@ int PIDCalc( struct PID *pp, unsigned int NextPoint )
 
 void compare_temper(unsigned int v_input) 		//PID控制输出函数
 {  
- 
-	 int delta =  PIDCalc ( &spid,v_input ); 
+	 int delta = 0;
+ 	 pidCounter++;
+	 if(pidCounter<spid.duration)return;
+	 pidCounter = 0; 
+
+	 delta =  PIDCalc ( &spid,v_input ); 
 
 	 if( delta > spid.maxMoveStep){
 	  delta =  spid.maxMoveStep;
@@ -56,15 +66,17 @@ void compare_temper(unsigned int v_input) 		//PID控制输出函数
  
 	 
 	 PWM1_set(spid.rout) ;
-	  
+	 
 	 num_lcdDis(0,0x0D,spid.rout,3);
 
-	 if(delta>0){
+	  if(delta>0){
+	  hz_lcdDis(1,0x0C,"+");
 	 	num_lcdDis(1,0x0D,delta,3);
 	}else{
 		hz_lcdDis(1,0x0C,"-");
 		num_lcdDis(1,0x0D,-1*delta,3);
 	}
+	 	 
 }
 /************************************************
 				PID函数初始化
@@ -74,12 +86,14 @@ void PIDInit()
 
   memset (&spid,0,sizeof(struct PID)); 	// Initialize Structure 
   
-  spid.Proportion = 0.006; // Set PID Coefficients 	0.009开始震荡，取60%~70%=	0.006
-  spid.Integral =  0.002; 
-  spid.Derivative =0; 
+  spid.Proportion = 0.01; // Set PID Coefficients 	0.009开始震荡，取60%~70%=	0.006
+  spid.Integral =   0.0002; 
+  spid.Derivative =0.02; 
   spid.rout = 0;
-  spid.set_point = 2500;
-  spid.maxMoveStep = 15;
+  spid.set_point = 4000;
+  spid.maxMoveStep = 80;
+  spid.deadZone = 55;
+  spid.duration = 4;
 }
 
 unsigned int getPIDSet_point()
@@ -89,17 +103,61 @@ unsigned int getPIDSet_point()
 void SetPointDown ()
 {
 	spid.set_point-=1000;
-	PWM0_set((unsigned char) spid.set_point/50);
-	num_lcdDis(0,0x0C,spid.set_point/50,3);
+	PWM0_set( spid.set_point/50);
+
 }
  
 void SetPointUp ()
 {
-	/*spid.set_point+=1000;
-	PWM0_set((unsigned char)spid.set_point/50);
-	num_lcdDis(0,0x0C,spid.set_point/50,3);*/
-	spid.Integral += 0.001;
- 
-	Delay( 500);
+	spid.set_point+=1000;
+	PWM0_set(spid.set_point/50);
+
 }
- 
+void PIDparam_P_inc ()
+{
+   spid.Proportion +=0.001;
+   hz_lcdDis(0,0x0a,"P");
+   num_lcdDis(0,0x0b,spid.Proportion*1000,2);
+} 
+void PIDparam_P_dec  ()
+{
+  spid.Proportion -=0.001;
+   hz_lcdDis(0,0x0a,"P");
+   num_lcdDis(0,0x0b,spid.Proportion*1000,2);
+} 
+void PIDparam_I_inc ()
+{
+   spid.Proportion +=0.001;
+   hz_lcdDis(0,0x0a,"P");
+   num_lcdDis(0,0x0b,spid.Proportion*1000,2);
+}  
+void PIDparam_I_dec  ()
+{
+   spid.Proportion -=0.001;
+   hz_lcdDis(0,0x0a,"P");
+   num_lcdDis(0,0x0b,spid.Integral*1000,2);
+} 
+void PIDparam_D_inc ()
+{
+   spid.Proportion +=0.001;
+   hz_lcdDis(0,0x0a,"P");
+   num_lcdDis(0,0x0b,spid.Derivative*1000,2);
+}  
+void PIDparam_D_dec  ()
+{
+  spid.Proportion -=0.001;
+   hz_lcdDis(0,0x0a,"P");
+   num_lcdDis(0,0x0b,spid.Derivative*1000,2);
+}
+void PIDparam_Dura_inc ()
+{
+   spid.duration +=5;
+   hz_lcdDis(0,0x0a,"P");
+   num_lcdDis(0,0x0b,spid.Derivative*1000,2);
+}  
+void PIDparam_Dura_dec  ()
+{
+  spid.duration -=5;
+   hz_lcdDis(0,0x0a,"P");
+   num_lcdDis(0,0x0b,spid.Derivative*1000,2);
+}  
